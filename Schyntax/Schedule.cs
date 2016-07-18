@@ -7,10 +7,26 @@ namespace Schyntax
     public class Schedule
     {
         private readonly IrProgram _ir;
+        private readonly Func<DateTimeOffset> _getTime;
+
         public string OriginalText { get; }
 
-        public Schedule(string schedule)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Schedule"/> class.
+        /// </summary>
+        /// <param name="schedule">The schedule.</param>
+        public Schedule(string schedule) : this(schedule, () => DateTimeOffset.UtcNow)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Schedule"/> class.
+        /// </summary>
+        /// <param name="schedule">The schedule.</param>
+        /// <param name="getTime">A func delegate for obtaining the current time. This allows something other than the local machine clock to drive the schedule</param>
+        public Schedule(string schedule, Func<DateTimeOffset> getTime)
+        {
+            _getTime = getTime;
             OriginalText = schedule;
 
             var parser = new Parser(schedule);
@@ -24,7 +40,7 @@ namespace Schyntax
 
         public DateTimeOffset Next()
         {
-            return Next(DateTimeOffset.UtcNow);
+            return Next(_getTime());
         }
 
         public DateTimeOffset Next(DateTimeOffset after)
@@ -34,7 +50,7 @@ namespace Schyntax
 
         public DateTimeOffset Previous()
         {
-            return Previous(DateTimeOffset.UtcNow);
+            return Previous(_getTime());
         }
 
         public DateTimeOffset Previous(DateTimeOffset atOrBefore)
